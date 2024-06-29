@@ -1,95 +1,127 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useSelector } from "react-redux";
+import { useForm } from "react-hook-form";
+
+import { Box, Button, Stack } from "@mui/material";
+import { FormInputText } from "@/components/form-input";
+
+import { fetchUserData, updateUserData } from "@/apis/user";
+import { UserSchema, userSchema } from "@/utils/types/user";
+import { useAppDispatch } from "@/store/hooks";
+import { setResult, processing } from "@/store/reducers";
+import { RootState } from "@/store/store";
 
 export default function Home() {
+  const { loading } = useSelector((state: RootState) => state.data);
+  const { handleSubmit, control, setValue } = useForm<UserSchema>({
+    resolver: zodResolver(userSchema),
+    defaultValues: {
+      displayName: "",
+      email: "",
+      phoneNumber: "",
+      photoURL: "",
+    },
+  });
+  const dispatch = useAppDispatch();
+
+  async function getData() {
+    const response = await fetchUserData();
+    const result = {
+      success: response.data ? true : false,
+      messages: response.message,
+    };
+
+    dispatch(setResult(result));
+
+    if (response.data) {
+      setValue("displayName", response.data.displayName);
+      setValue("email", response.data.email);
+      setValue("phoneNumber", response.data.phoneNumber ?? "");
+      setValue("photoURL", response.data.photoURL);
+    }
+  }
+
+  async function updateData(data: UserSchema) {
+    dispatch(processing());
+
+    const response = await updateUserData(data);
+    const result = {
+      success: response.data ? true : false,
+      messages: response.message,
+    };
+
+    dispatch(setResult(result));
+  }
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <Box
+      component="div"
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Stack
+        sx={{
+          width: "100%",
+        }}
+        spacing={3}
+      >
+        <Stack
+          component="form"
+          id="form-user"
+          spacing={2}
+          onSubmit={handleSubmit(updateData)}
+        >
+          <FormInputText
+            name="displayName"
+            control={control}
+            label="Display Name"
+          />
+          <FormInputText
+            name="email"
+            control={control}
+            label="Email"
+            disabled
+          />
+          <FormInputText
+            name="phoneNumber"
+            control={control}
+            label="Phone Number"
+          />
+          <FormInputText
+            name="photoURL"
+            control={control}
+            label="Photo URL"
+            disabled
+          />
+        </Stack>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+          <Button
+            form="form-user"
+            variant="outlined"
+            fullWidth
+            onClick={() => getData()}
+            disabled={loading}
           >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+            Fetch Data
+          </Button>
+          <Button
+            form="form-user"
+            variant="contained"
+            fullWidth
+            type="submit"
+            disabled={loading}
+          >
+            Submit
+          </Button>
+        </Stack>
+      </Stack>
+    </Box>
   );
 }

@@ -2,6 +2,14 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
+import { ThemeProvider } from "@mui/material/styles";
+import Container from "@mui/material/Container";
+import StoreProvider from "@/components/store-provider";
+
+import theme from "@/theme";
+import CustomSnackbar from "@/components/snackbar";
+import Header from "@/components/header";
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -16,7 +24,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <StoreProvider>
+          <ThemeProvider theme={theme}>
+            <Container
+              maxWidth="xl"
+              sx={{
+                height: "100vh",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <Header />
+              {children}
+              <CustomSnackbar />
+            </Container>
+          </ThemeProvider>
+        </StoreProvider>
+      </body>
     </html>
   );
 }
