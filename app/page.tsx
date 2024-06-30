@@ -1,59 +1,34 @@
-"use client";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import UserForm from "@/components/user-form";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useSelector } from "react-redux";
-import { useForm } from "react-hook-form";
+import { fetchUserData } from "@/apis/user";
 
-import { Box, Button, Stack } from "@mui/material";
-import { FormInputText } from "@/components/form-input";
+async function getData() {
+  const response = await fetchUserData();
 
-import { fetchUserData, updateUserData } from "@/apis/user";
-import { UserSchema, userSchema } from "@/utils/types/user";
-import { useAppDispatch } from "@/store/hooks";
-import { setResult, processing } from "@/store/reducers";
-import { RootState } from "@/store/store";
-
-export default function Home() {
-  const { loading } = useSelector((state: RootState) => state.data);
-  const { handleSubmit, control, setValue } = useForm<UserSchema>({
-    resolver: zodResolver(userSchema),
-    defaultValues: {
-      displayName: "",
-      email: "",
-      phoneNumber: "",
-      photoURL: "",
-    },
-  });
-  const dispatch = useAppDispatch();
-
-  async function getData() {
-    const response = await fetchUserData();
-    const result = {
-      success: response.data ? true : false,
-      messages: response.message,
+  if (!response.data) {
+    return {
+      isLogin: false,
+      message: response.message,
+      data: {
+        displayName: "",
+        email: "",
+        phoneNumber: "",
+        photoURL: "",
+      },
     };
-
-    dispatch(setResult(result));
-
-    if (response.data) {
-      setValue("displayName", response.data.displayName);
-      setValue("email", response.data.email);
-      setValue("phoneNumber", response.data.phoneNumber ?? "");
-      setValue("photoURL", response.data.photoURL);
-    }
   }
 
-  async function updateData(data: UserSchema) {
-    dispatch(processing());
+  return {
+    isLogin: true,
+    message: response.message,
+    data: response.data,
+  };
+}
 
-    const response = await updateUserData(data);
-    const result = {
-      success: response.data ? true : false,
-      messages: response.message,
-    };
-
-    dispatch(setResult(result));
-  }
+export default async function Home() {
+  const { isLogin, message, data } = await getData();
 
   return (
     <Box
@@ -66,62 +41,13 @@ export default function Home() {
         justifyContent: "center",
       }}
     >
-      <Stack
-        sx={{
-          width: "100%",
-        }}
-        spacing={3}
+      <Alert
+        severity={isLogin ? "success" : "error"}
+        sx={{ marginBottom: "1rem" }}
       >
-        <Stack
-          component="form"
-          id="form-user"
-          spacing={2}
-          onSubmit={handleSubmit(updateData)}
-        >
-          <FormInputText
-            name="displayName"
-            control={control}
-            label="Display Name"
-          />
-          <FormInputText
-            name="email"
-            control={control}
-            label="Email"
-            disabled
-          />
-          <FormInputText
-            name="phoneNumber"
-            control={control}
-            label="Phone Number"
-          />
-          <FormInputText
-            name="photoURL"
-            control={control}
-            label="Photo URL"
-            disabled
-          />
-        </Stack>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <Button
-            form="form-user"
-            variant="outlined"
-            fullWidth
-            onClick={() => getData()}
-            disabled={loading}
-          >
-            Fetch Data
-          </Button>
-          <Button
-            form="form-user"
-            variant="contained"
-            fullWidth
-            type="submit"
-            disabled={loading}
-          >
-            Submit
-          </Button>
-        </Stack>
-      </Stack>
+        {message}
+      </Alert>
+      <UserForm data={data} />
     </Box>
   );
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
 
 import { ThemeProvider } from "@mui/material/styles";
@@ -22,6 +23,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = cookies().get("user_session")?.value || null;
+
   return (
     <html lang="en">
       <body className={inter.className}>
@@ -35,7 +38,7 @@ export default function RootLayout({
                 flexDirection: "column",
               }}
             >
-              <Header />
+              <Header session={session} />
               {children}
               <CustomSnackbar />
             </Container>

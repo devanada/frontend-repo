@@ -1,12 +1,5 @@
 import { z } from "zod";
 
-export interface IUser {
-  photoURL: string;
-  displayName: string;
-  phoneNumber: string | null;
-  email: string;
-}
-
 export const userSchema = z.object({
   photoURL: z.string({
     required_error: "Photo is required",
@@ -16,9 +9,7 @@ export const userSchema = z.object({
       required_error: "Display name is required",
     })
     .min(1, { message: "Display name is required" }),
-  phoneNumber: z.string({
-    required_error: "Phone number is required",
-  }),
+  phoneNumber: z.string().nullable(),
   email: z.string({
     required_error: "Email is required",
   }),

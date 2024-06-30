@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 
 import { IResponse } from "@/utils/types/api";
-import { IUser } from "@/utils/types/user";
+import { UserSchema } from "@/utils/types/user";
 
 export async function fetchUserData() {
   try {
@@ -12,7 +12,7 @@ export async function fetchUserData() {
         Cookie: `user_session=${cookies().get("user_session")?.value ?? ""}`,
       },
     });
-    const result: IResponse<IUser> = await response.json();
+    const result: IResponse<UserSchema> = await response.json();
 
     return result;
   } catch (error) {
@@ -20,7 +20,7 @@ export async function fetchUserData() {
   }
 }
 
-export async function updateUserData(body: IUser) {
+export async function updateUserData(body: UserSchema) {
   try {
     const response = await fetch("http://localhost:8080/update-user-data", {
       method: "PUT",
